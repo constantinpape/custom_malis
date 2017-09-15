@@ -1,3 +1,14 @@
+# Platform-specific dylib extension
+if [ $(uname) == "Darwin" ]; then
+    export CC=clang
+    export CXX=clang++
+    export DYLIB="dylib"
+else
+    export CC=gcc
+    export CXX=g++
+    export DYLIB="so"
+fi
+
 ##
 ## START THE BUILD
 ##

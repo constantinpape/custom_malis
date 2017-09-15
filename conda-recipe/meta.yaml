@@ -1,11 +1,12 @@
 package:
   name: custom_malis
-  {% set tagged_version = GIT_DESCRIBE_TAG|replace("v","")|replace("-", ".") %}
-  # If we're using a non-tagged revision, append '.postN' to the version
-  {% if GIT_DESCRIBE_NUMBER|int != 0 %}
-    {% set tagged_version = tagged_version + '.post' + GIT_DESCRIBE_NUMBER %}
-  {% endif %}
-  version: {{tagged_version}}
+      #{% set tagged_version = GIT_DESCRIBE_TAG|replace("v","")|replace("-", ".") %}
+      ## If we're using a non-tagged revision, append '.postN' to the version
+      #{% if GIT_DESCRIBE_NUMBER|int != 0 %}
+      #  {% set tagged_version = tagged_version + '.post' + GIT_DESCRIBE_NUMBER %}
+      #{% endif %}
+      #version: {{tagged_version}}
+  version: 0.1
 
 
 source:
@@ -14,7 +15,8 @@ source:
 
 build:
   number: 0
-  string: py{{py}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
+  string: py{{py}}_{{PKG_BUILDNUM}}
+  #string: py{{py}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
 
 
 requirements:
@@ -33,6 +35,6 @@ test:
 
 
 about:
-  home: ghp
+  home: https://github.com/constantinpape/custom_malis.git
   license: MIT
   summary: Malis implementation with accessible custom neighborhood.
