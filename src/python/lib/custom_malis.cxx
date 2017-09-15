@@ -22,6 +22,11 @@ namespace custom_malis {
         // iterators for multiarray are slow :(
         // get the pointer to 0 and fill up to data.size() with zeros - should be much faster
         std::fill(data.begin(), data.end(), 0.);
+        //std::vector<size_t> coord(DIM);
+        //for(size_t i = 0; i < data.size(); ++i) {
+        //    data.indexToCoordinates(i, coord.begin());
+        //    data()
+        //}
     }
 
     template<unsigned DIM, class DATA_TYPE, class LABEL_TYPE>
@@ -65,6 +70,8 @@ namespace custom_malis {
                     randIndex
                 );
             }
+            // need to invert here
+            gradients *= -1;
             return gradients;
         },
         py::arg("affinities"), py::arg("groundtruth"), py::arg("pos")

@@ -6,6 +6,14 @@ project(custom_malis)
 ####################
 # set c++ 11 support
 ####################
+include(CheckCXXCompilerFlag) 
+
+# make sure the compiler supports c++11
+# FIXME I think this won't work for MSVC
+CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CPP11_FLAG)
+if(NOT HAS_CPP11_FLAG)
+    message(FATAL_ERROR "Unsupported compiler -- custom_malis requires C++11 support!")
+endif()
 
 set(CMAKE_CXX_FLAG ${CMAKE_CXX_FLAG} "-std=c++11")
 
@@ -19,6 +27,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
         "MinSizeRel" "RelWithDebInfo")
 endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" U_CMAKE_BUILD_TYPE)
+
+
+option(BUILD_CPP_TEST OFF)
 
 
 #-------------------------------------------------------------------------------------------------------------------
@@ -36,6 +47,15 @@ if(UNIX AND NOT APPLE)
 else()
   set(LINK_RT false)
 endif()
+
+
+#################
+# google test
+################
+
+# add gtest external project and include the directories
+add_subdirectory(external/googletest/googletest)
+include_directories(${gtest_SOURCE_DIR/include} ${gtest_SOURCE_DIR})
 
 
 ##################

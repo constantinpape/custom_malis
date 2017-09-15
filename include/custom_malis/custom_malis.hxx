@@ -8,10 +8,12 @@
 
 #include "nifty/marray/marray.hxx"
 #include "nifty/tools/for_each_coordinate.hxx"
-#include "nifty/ufd/ufd.hxx"
+
+#include "boost/pending/disjoint_sets.hpp"
 
 
 namespace custom_malis {
+
 
 template<unsigned DIM, typename DATA_TYPE, typename LABEL_TYPE>
 void compute_malis_gradient(
@@ -54,8 +56,11 @@ void compute_malis_gradient(
         pixelShape[d] = groundtruth.shape(d);
     }
 
-    // union find, overlaps and segment sizes
-    nifty::ufd::Ufd<LabelType> sets(numberOfNodes);
+    // WITH BOOST UFD
+    std::vector<LabelType> rank(numberOfNodes);
+    std::vector<LabelType> parent(numberOfNodes);
+    boost::disjoint_sets<LabelType*, LabelType*> sets(&rank[0], &parent[0]);
+
     std::vector<std::map<LabelType, size_t>> overlaps(numberOfNodes);
     std::map<LabelType, size_t> segmentSizes;
 
@@ -65,7 +70,7 @@ void compute_malis_gradient(
     size_t nodeIndex = 0;
     nifty::tools::forEachCoordinate(pixelShape, [&](Coord coord) {
         auto gtId = groundtruth(coord.asStdArray());
-
+        sets.make_set(nodeIndex);
         if(gtId != 0) {
             overlaps[nodeIndex].insert(std::make_pair(gtId, 1));
             ++segmentSizes[gtId];
@@ -119,7 +124,7 @@ void compute_malis_gradient(
     AffinityCoord affCoord;
     typename std::map<LabelType,size_t>::iterator itU, itV;
     DATA_TYPE affinity, currentGradient;
-
+    
     // iterate over the pqueue
     for(auto edgeIndex : pqueue) {
 
@@ -148,8 +153,8 @@ void compute_malis_gradient(
             nodeU += gtCoordU[d] * groundtruth.strides(d);
             nodeV += gtCoordV[d] * groundtruth.strides(d);
         }
-        setU = sets.find(nodeU);
-        setV = sets.find(nodeV);
+        setU = sets.find_set(nodeU);
+        setV = sets.find_set(nodeV);
 
         // only do stuff if the two segments are not merged yet
         if(setU != setV) {
@@ -180,7 +185,8 @@ void compute_malis_gradient(
             // std::cout << "Corresponding to nodes: " << nodeU << " " << nodeV << std::endl;
             // std::cout << "Correspodning to Sets: " << setU << " " << setV << std::endl;
 
-            sets.merge(setU, setV);
+            sets.link(setU, setV);
+
             currentGradient = 0.;
             affinity = affinities(affCoord.asStdArray());
             if(pos) {
@@ -234,7 +240,7 @@ void compute_malis_gradient(
             gradientsOut(affCoord.asStdArray()) += (currentGradient / nPairNorm);
 
             // move the pixel bags of the non-representative to the representative
-            if (sets.find(setU) == setV) // make setU the rep to keep and setV the rep to empty
+            if (sets.find_set(setU) == setV) // make setU the rep to keep and setV the rep to empty
                 std::swap(setU,setV);
 
             itV = overlaps[setV].begin();
@@ -378,9 +384,12 @@ void compute_constrained_malis_gradient(
         affinitiesNeg, groundtruth, ranges, axes, false, gradientsOut, lossNeg, classErr, rand
     );
 
+    // normalize and invert the gradients
+    gradientsOut /= - 2.;
+
     //auto t3 = std::chrono::steady_clock::now();
     //std::cout << "T-neg pass:   " << std::chrono::duration_cast<TimeType>(t3 - t2).count() << " mus" << std::endl;
-    lossOut = (lossPos + lossNeg) / 2.;
+    lossOut = - (lossPos + lossNeg) / 2.;
 }
 
 }

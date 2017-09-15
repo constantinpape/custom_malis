@@ -1,3 +1,6 @@
 [submodule "external/nifty"]
 	path = external/nifty
 	url = https://github.com/constantinpape/nifty.git
+[submodule "external/googletest"]
+	path = external/googletest
+	url = https://github.com/google/googletest

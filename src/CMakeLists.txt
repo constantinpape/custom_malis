@@ -1,3 +1,4 @@
 add_subdirectory(python)
-#TODO
-#add_subdirectory(test)
+if(BUILD_CPP_TEST)
+    add_subdirectory(test)
+endif()
