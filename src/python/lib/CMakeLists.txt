@@ -1,4 +1,35 @@
 ###########################################################################
+# create a custom target which bundles all python building and copying
+###########################################################################
+add_custom_target(python-module)
+
+###########################################################################
+# copy all python files from:
+#    src/python/module
+# recursively into
+#   /blddir/python/
+###########################################################################
+file(GLOB_RECURSE  ${MODULE_NAME}_PYTHON_FILES
+    "${CMAKE_SOURCE_DIR}/src/python/module/custom_malis/*.py"
+)
+FOREACH(PYTHON_FILENAME   ${${MODULE_NAME}_PYTHON_FILES})
+    string(REPLACE "${CMAKE_SOURCE_DIR}/src/python/module/" ""
+        RELATIVE_FILENAME
+        ${PYTHON_FILENAME})
+    string(REPLACE "/" "_"
+        RELATIVE_FILENAME_TARGET_NAME
+        ${RELATIVE_FILENAME})
+    get_filename_component(FILE_DIR  ${CMAKE_BINARY_DIR}/${RELATIVE_FILENAME} DIRECTORY)
+    file(MAKE_DIRECTORY ${FILE_DIR})
+
+    add_custom_target(copy_${RELATIVE_FILENAME_TARGET_NAME} ALL
+        COMMAND cmake -E copy_if_different
+        ${PYTHON_FILENAME}
+        ${CMAKE_BINARY_DIR}/python/${RELATIVE_FILENAME})
+    add_dependencies(python-module copy_${RELATIVE_FILENAME_TARGET_NAME})
+ENDFOREACH()
+
+###########################################################################
 # macro to simplyfy the adding of a submodule
 ###########################################################################
 macro(addPythonModule)
@@ -37,17 +68,17 @@ macro(addPythonModule)
     )
 
     # create module dir
-    #file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/python/${ADD_PY_MOD_NESTED_NAME})
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/python/${ADD_PY_MOD_NESTED_NAME})
 
     # copy the module file
     ADD_CUSTOM_COMMAND(
         TARGET _${MODULE_NAME}
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different $<TARGET_FILE:_${MODULE_NAME}>
-        ${CMAKE_BINARY_DIR}/_custom_malis.so
+        ${CMAKE_BINARY_DIR}/python/${ADD_PY_MOD_NESTED_NAME}/
         COMMENT "Copying target ${MODULE_NAME} to temporary module directory")
 
-    # add_dependencies(malis_impl _${MODULE_NAME})
+    add_dependencies(python-module _${MODULE_NAME})
 endmacro()
 
 

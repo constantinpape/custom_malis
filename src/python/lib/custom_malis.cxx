@@ -27,7 +27,7 @@ namespace custom_malis {
     template<unsigned DIM, class DATA_TYPE, class LABEL_TYPE>
     void exportMalisLossT(py::module & malisModule) {
 
-        malisModule.def("malis_impl", []
+        malisModule.def("malis", []
         (
             nifty::marray::PyView<DATA_TYPE, DIM+1> affinities,
             nifty::marray::PyView<LABEL_TYPE, DIM> groundtruth,
@@ -42,7 +42,6 @@ namespace custom_malis {
 
             // return data
             nifty::marray::PyView<DATA_TYPE, DIM+1> gradients(shape.begin(), shape.end());
-
             DATA_TYPE loss, classficationError, randIndex;
 
             // call c++ function
@@ -66,9 +65,7 @@ namespace custom_malis {
                     randIndex
                 );
             }
-
-            // FIXME this needs to copy the data, so it is not the most efficient thing to do...
-            return std::make_tuple(gradients, loss, classficationError, randIndex);
+            return gradients;
         },
         py::arg("affinities"), py::arg("groundtruth"), py::arg("pos")
         );
@@ -77,7 +74,7 @@ namespace custom_malis {
     template<unsigned DIM, class DATA_TYPE, class LABEL_TYPE>
     void exportConstrainedMalisLossT(py::module & malisModule) {
 
-        malisModule.def("constrained_malis_impl", []
+        malisModule.def("constrained_malis", []
             (
                 nifty::marray::PyView<DATA_TYPE, DIM+1> affinities,
                 nifty::marray::PyView<LABEL_TYPE, DIM> groundtruth
@@ -118,8 +115,13 @@ namespace custom_malis {
             },
             py::arg("affinities"), py::arg("groundtruth")
         );
+    }
 
-        malisModule.def("constrained_malis_custom_nh_impl", []
+
+    template<unsigned DIM, class DATA_TYPE, class LABEL_TYPE>
+    void exportConstrainedMalisLossCustomNhT(py::module & malisModule) {
+
+        malisModule.def("constrained_malis_custom_nh", []
             (
                 nifty::marray::PyView<DATA_TYPE, DIM+1> affinities,
                 nifty::marray::PyView<LABEL_TYPE, DIM> groundtruth,
@@ -136,12 +138,11 @@ namespace custom_malis {
                 // return data
                 nifty::marray::PyView<DATA_TYPE, DIM+1> gradients(shape.begin(), shape.end());
                 //nifty::marray::Marray<DATA_TYPE> gradients(shape.begin(), shape.end());
-                DATA_TYPE loss = 0;
-
                 // call c++ function
                 {
                     py::gil_scoped_release allowThreads;
 
+                    DATA_TYPE loss = 0;
                     initPyView(gradients);
                     compute_constrained_malis_gradient<DIM>(
                         affinities,
@@ -174,6 +175,12 @@ namespace custom_malis {
         exportConstrainedMalisLossT<3, float, uint32_t>(malisModule);
         exportConstrainedMalisLossT<2, float, int64_t>(malisModule);
         exportConstrainedMalisLossT<3, float, int64_t>(malisModule);
+
+        // export constrained malis loss custom nh
+        exportConstrainedMalisLossCustomNhT<2, float, uint32_t>(malisModule);
+        exportConstrainedMalisLossCustomNhT<3, float, uint32_t>(malisModule);
+        exportConstrainedMalisLossCustomNhT<2, float, int64_t>(malisModule);
+        exportConstrainedMalisLossCustomNhT<3, float, int64_t>(malisModule);
 
     };
 }
