@@ -44,7 +44,6 @@ cmake .. \
         -DCMAKE_CXX_FLAGS_RELEASE="${CXXFLAGS} -O3 -DNDEBUG" \
         -DCMAKE_CXX_FLAGS_DEBUG="${CXXFLAGS}" \
 \
-        -DBUILD_NIFTY_PYTHON=ON \
         -DPYTHON_EXECUTABLE=${PYTHON} \
         -DPYTHON_LIBRARY=${PREFIX}/lib/libpython${PY_ABI}.${DYLIB} \
         -DPYTHON_INCLUDE_DIR=${PREFIX}/include/python${PY_ABI} \
@@ -58,4 +57,4 @@ make
 
 ##
 ## Install to prefix
-cp -r ${SRC_DIR}/build/python/custom_mallis ${PREFIX}/lib/python${PY_VER}/site-packages/
+cp -r ${SRC_DIR}/build/python/custom_malis ${PREFIX}/lib/python${PY_VER}/site-packages/
